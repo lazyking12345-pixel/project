@@ -1,0 +1,232 @@
+5.8 question
+1번
+32비트 범용 레지스터를 전부 스택에 푸시하는 명령
+EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI 한 번에 저장
+정답: PUSHAD
+
+2번
+32비트 EFLAGS 레지스터를 스택에 푸시하는 명령
+현재 플래그 값을 스택에 저장
+PUSHFD
+
+3번
+스택 맨 위 값을 EFLAGS로 팝 하는 명령
+저장해 둔 플래그를 복원
+POPFD
+
+4번
+NASM의 PUSH EAX EBX ECX 방식이 MASM의 PUSHAD보다 나은 점
+필요한 레지스터만 골라서 저장하면 더 빠르고 스택도 덜 사용한다.
+그렇기때문에 꼭 필요한 레지스터만 푸시할 수 있어 오버헤드가 줄고, 호출 규약에 맞게 유연하게 사용할 수 있다.
+
+5번
+PUSH 명령이 없다고 가정할 때 push eax와 같은 효과를 내는 명령 두 개
+스택 포인터를 줄이고, 그 위치에 값을 저장해야하기에 
+정답: sub esp,4 mov [esp],eax
+
+6번
+RET 명령은 스택 맨 위 값을 명령 포인터로 팝 한다.
+RET 명령은 호출한 위치로 되돌아갈 때 사용하는 것이므로 정답이다.
+정답: True
+
+7번
+NESTED 연산자를 쓰지 않으면 중첩 프로시저 호출이 허용되지 않는다.
+하드웨어와 어셈블러 모두 중첩 호출을 기본적으로 지원하는 것이라 정답이 아니다.
+정답: Talse
+
+8번
+보호 모드에서 프로시저 호출마다 최소 4바이트의 스택 공간을 사용한다.
+32비트에서는 RET를 위해서 4바이트 반환 주소가 저장된다. 
+정답: True
+
+9번
+32비트 인자를 넘길 때 ESI, EDI 레지스터는 사용할 수 없다.
+호출 규약에 따라 일반 레지스터도 매개변수 전달에 사용 가능하다.
+정답: False
+
+10번
+ArraySum 프로시저는 어떤 doubleword 배열이든 가리키는 포인터를 인자로 받는다.
+보통 배열의 첫 원소 주소를 인자로 받아 합을 구하는 형태이기에 정답이다
+정답: True
+
+11번
+USES 연산자는 프로시저 안에서 수정되는 모든 레지스터 이름을 나열하게 해 준다.
+USES 두,에 적은 레지스터들을 어셈블러가 자동으로 push/pop 해 주기에 정답이다 
+정답: True
+
+12번
+USES 연산자는 PUSH만 생성하므로, POP은 직접 써야 한다.
+MASM의 USES는 프로시저 시작에 push, 끝에 pop까지 자동 생성하기 때문에 직접 쓸 필요가 없다.
+정답: False
+
+13번
+USES 지시문의 레지스터 목록은 쉼표로 구분해야 한다.
+MASM의 USES 문법은 공백으로 레지스터를 나열하기 때문에 쉼표 구별은 틀렸다.
+정답: False
+
+14번
+ArraySum이 16비트 word 배열을 더하도록 바꾸려면?
+배열 매개변수를 DWORD PTR 대신 WORD PTR 로 선언
+루프에서 인덱스를 4씩 증가시키던 부분을 2씩 증가로 변경
+합을 저장하는 레지스터/변수는 32비트로 유지(오버플로 방지)
+스택은 LIFO. 위 코드에서
+첫 push: [top]=5
+둘째 push: [top]=6, 그 아래 5
+첫 pop: EAX ← 6
+둘째 pop: EAX ← 5
+최종적으로 EAX에는 5가 남는다.
+정답: EAX = 5
+
+15번
+호출 시점: 스택에는 (… , 2000h, 10, return‑addr).
+CALL은 return‑addr을 push한 뒤 10번 줄로 점프
+Ex2Sub에서 pop eax → 맨 위 return‑addr이 EAX로 이동, 스택에는 (…, 2000h, 10)만 남음
+RET가 없어서 호출자에게 못 돌아가고, 다음 줄(11 이후 쓰레기)로 흘러가 런타임 오류 발생
+고르기: “프로그램이 10번 줄에서 런타임 오류를 내고 끝난다” 
+보기에서 The program will halt with a runtime error on Line 10 이 맞다.
+
+16번
+호출 전 스택: (…, 2000h)
+2: EAX=30
+3: push eax → 스택 (…, 2000h, 30)
+4: call Ex3Sub → return‑addr push → (…, 2000h, 30, retaddr), EIP는 9번 줄
+9: add eax,30 → EAX = 60
+10: mov eax,80 → EAX = 80
+11: ret → retaddr pop, main으로 복귀, 스택에는 여전히 (…, 2000h, 30)
+main으로 돌아온 뒤에는 EAX=80, 스택 정리는 안 했지만 ExitProcess가 바로 종료
+따라서 맞는 설명은 “EAX는 80이 된다” 류
+보기 중에서는: EAX will equal 80 when the program returns from Ex3Sub (또는 그와 같은 의미의 선택지)
+main PROC
+  push 2000h        ; 스택에 2000h
+  mov  eax,30       ; EAX = 30
+  push eax          ; 스택에 30 추가
+  call Ex3Sub       ; return 주소 push 후 Ex3Sub로 점프
+  INVOKE ExitProcess,0
+
+17번
+main PROC
+2:  mov  eax,30
+3:  push eax       ; 스택 ← 30
+4:  push 40        ; 스택 ← 40, 30
+5:  call Ex3Sub    ; 스택 ← ret, 40, 30
+6:  INVOKE ExitProcess,0
+7:  main ENDP
+
+Ex3Sub PROC
+9:  pusha          ; 모든 GPR을 스택에 저장
+10: mov  eax,80    ; EAX = 80
+12: popa           ; pusha 이전의 레지스터 값들 복원
+13: ret
+14: Ex3Sub ENDP
+main에서 mov eax,30 후 push eax 했지만, pusha는 EAX의 옛 값(30) 을 포함해 모든 레지스터를 따로 저장한다.
+Ex3Sub 안에서 mov eax,80으로 바꿔도, popa가 호출되면 pusha 시점의 값들로 전부 되돌린다. 그래서 EAX는 다시 30으로 복원된다.
+ret으로 main으로 돌아온 뒤, 6번 줄에서의 EAX 값은 30이다.
+따라서 정답은 c. EAX will equal 30 on line 6 이다
+
+18번
+main PROC
+2:  mov  eax,40        ; EAX = 40
+3:  push offset Here   ; 리턴 주소 대신 Here의 주소 push
+4:  jmp  Ex4Sub        ; Ex4Sub로 점프(스택: …, Here)
+5:Here:
+6:  mov  eax,30
+7:  INVOKE ExitProcess,0
+8:  main ENDP
+
+Ex4Sub PROC
+11: ret
+12: Ex4Sub ENDP
+3행에서 Here의 주소를 스택에 올려 놓고, 4행에서 그냥 점프했다가
+Ex4Sub에서 ret를 하면 스택 위의 Here 주소로 돌아온다.
+따라서 6행이 실행되고 EAX에 30이 들어간 뒤 7행으로 가서 종료한다.
+정답: c. EAX will equal 30 on line 6
+
+19번
+main PROC
+1:  mov edx,0          ; EDX = 0
+2:  mov eax,40         ; EAX = 40
+3:  push eax           ; 스택 ← 40
+4:  push eax           ; 스택 ← 40, 40
+5:  call Ex5Sub        ; 스택 ← ret, 40, 40
+6:  INVOKE ExitProcess,0
+7:  main ENDP
+
+Ex5Sub PROC
+9:  pop eax            ; EAX ← ret, 스택: 40, 40
+10: pop edx            ; EDX ← 40,  스택: 40
+11: pusha              ; 모든 레지스터를 스택에 저장
+12: pop eax            ; EAX ← pusha가 저장해 둔 EAX 값(= ret 주소)
+13: ret
+14: Ex5Sub ENDP
+call이 push 한 리턴 주소를 9행에서 EAX로 잘못 꺼내고, 그 뒤에 또 ret를 하려고 해서,
+스택에 남은 값(40 등)을 잘못된 리턴 주소로 사용하게 된다.
+그래서 main으로 정상 복귀하지 못하고, ret 실행 시점(13행)에서 잘못된 주소로 점프하며 런타임 에러가 난다.
+정답: d. The program will halt with a runtime error on Line 11
+
+20번
+.data
+array DWORD 4 DUP(0)
+
+.code
+main PROC
+    mov eax,10       ; EAX = 10
+    mov esi,0        ; ESI = 0
+    call proc_1
+    add esi,4        ; ESI = 4
+    add eax,10       ; EAX = 이전 값 +10
+    mov array[esi],eax
+    INVOKE ExitProcess,0
+main ENDP
+
+proc_3 PROC
+    mov array[esi],eax
+    ret
+proc_3 ENDP
+여기서 ESI가 가리키는 위치에 EAX를 저장한다.
+
+proc_2 PROC
+    call proc_3
+    add esi,4
+    add eax,10
+    mov array[esi],eax
+    ret
+proc_2 ENDP
+먼저 proc_3을 호출해서 현재 인덱스에 EAX를 저장한 뒤,
+다음 인덱스로(ESI+4) 옮겨 EAX에 10을 더하고 거기에 또 저장.
+
+proc_1 PROC
+    call proc_2
+    add esi,4
+    add eax,10
+    mov array[esi],eax
+    ret
+proc_1 ENDP
+
+proc_2가 끝난 뒤, 다시 인덱스를 하나 더 옮겨(ESI+4) EAX에 10을 더하고 저장.
+main 시작 시: EAX=10, ESI=0. call proc_1 → proc_1 안에서 EAX=10, ESI=0로 call proc_2
+proc_2
+call proc_3 → proc_3에서 array[0]=10
+돌아와서 add esi,4 → ESI=4
+add eax,10 → EAX=20
+mov array[4],eax → array=20​
+리턴 (EAX=20, ESI=4)
+
+proc_1 계속
+add esi,4 → ESI=8
+add eax,10 → EAX=30
+mov array[8],eax → array=30​
+리턴 (EAX=30, ESI=8)
+
+main으로 복귀 후
+add esi,4 → ESI=12
+add eax,10 → EAX=40
+mov array[12],eax → array=40
+
+최종 배열 값(각 요소):array[0] = 10. array[1] = 20. array[2] = 30. array[3] = 40
+
+
+
+
+
+
+
