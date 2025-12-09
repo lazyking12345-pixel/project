@@ -1,0 +1,170 @@
+6.10 question
+1번
+mov bx,0FFFFh
+and bx,6Bh
+0FFFFh AND 006Bh = 006Bh (어떤 값이든 FFFF와 AND 하면 자기 자신).
+정답: BX = 006Bh
+
+2번
+mov bx,91BAh
+and bx,92h
+92h = 0092h 이라고 생각하고 16비트 AND
+91BAh AND 0092h 하면 상위 바이트는 00h, 하위 바이트는 BAh AND 92h
+BAh = 1011 1010, 92h = 1001 0010 → AND = 1001 0010 = 92h
+정답: BX = 0092h
+
+3번
+mov bx,0649Bh
+or  bx,33Ah
+33Ah = 033Ah
+0649Bh OR 033Ah → 상위 바이트: 06h OR 03h = 07h
+하위 바이트: 9Bh OR 3Ah
+9Bh = 1001 1011, 3Ah = 0011 1010 → OR = 1011 1011 = BBh
+정답: BX = 07BBh
+
+4번
+mov bx,0296Bh
+xor bx,8181h
+XOR = 비트가 다르면 1, 같으면 0
+296Bh XOR 8181h = A8EAh
+정답: BX = 0A8EAh
+
+5번
+mov ebx,0AAF6498Bh
+or  ebx,3A219604h
+OR = 둘 중 하나라도 1이면 1
+각 자리 OR 하면 EBX = BAF7D98Fh
+정답: EBX = 0BAF7D98Fh
+
+6번
+mov rbx,0A7FA6498Bh
+xor rbx,0FFFFFFFFh
+32비트 값과 XOR FFFFFFFFh = NOT(하위 32비트). 상위 32비트는 그대로
+RBX = 0000000A_A7FA6498Bh 이라고 보면, 하위 8자리만 반전 → 58059B74h
+정답: RBX = 0000000A58059B74h
+
+7번
+mov al,01101111b
+and al,00101101b   ; a
+mov al,6Bh         ; 01101011b
+or  al,00001111b   ; b
+mov al,00001111b
+xor al,6Eh         ; c
+mov al,31h         ; 00110001b
+not al             ; d
+a. 01101111 AND 00101101 = 00101101 -> 00101101b
+b. 01101011 OR 00001111 = 01101111 -> 01101111b
+c. 00001111 XOR 01101110 = 01100001 -> 01100001b
+d. NOT 00110001 = 11001110 -> 11001110b
+
+8번
+mov al,7Ah
+not al        ; a
+mov al,3Dh
+or  al,82h    ; b
+mov al,25h
+and al,3Fh    ; c
+mov al,12h
+xor al,7Ch    ; d
+a. 7Ah → NOT = 85h -> AL = 85h
+b. 3Dh OR 82h = BFh -> AL = BFh
+c. 25h AND 3Fh = 25h -> AL = 25h
+d. 12h XOR 7Ch = 6Eh -> AL = 6Eh
+
+9번
+mov al,00001111b
+test al,00001000b    ; a
+mov al,00000100b
+cmp al,00000100b     ; b
+mov al,00000011b
+cmp al,00000100b 
+test은 AND만 하고 결과만 반영, CF는 항상 0
+a. 00001111 AND 00001000 = 00001000 =x 0 -> ZF=0, 최상위비트 0 -> SF=0, CF=0
+a: CF=0, ZF=0, SF=0
+b. cmp 4,4 -> 실제 연산은 4-4=0 -> ZF=1, CF=0, SF=0
+b: CF=0, ZF=1, SF=0
+c. cmp 3,4 -> 3-4 = -1 (FFh) -> ZF=0, 결과 음수 -> SF=1, 빌림 발생 -> CF=1
+c: CF=1, ZF=0, SF=1
+
+10번
+ECX 값으로 분기하는 조건 분기 명령
+“ECX 내용을 기준으로 점프”는 루프 계열이 아니라면 보통 JECXZ (ECX가 0이면 점프)
+정답: JECXZ
+
+11번
+JA와 JNBE가 ZF, CF에 어떻게 영향을 받는가?
+JA = “jump if above” = CF=0 그리고 ZF=0 일 때 분기 (부호 없는 > 비교).
+JNBE = “jump if not below or equal” = 조건이 같음, 역시 CF=0 AND ZF=0.
+즉, 두 명령은 같은 조건을 사용한다.
+
+12번
+mov eax,7FFFh
+cmp eax,8000h
+jl  L1
+mov edx,0
+L1:
+mov edx,0
+cmp eax,8000h 는 7FFFh − 8000h 를 계산해서 플래그만 설정한다.
+7FFFh(32767) < 8000h(32768)이므로 결과는 음수이고, 부호 있는 비교 기준으로 “작다”가 된다.
+그래서 jl L1 분기가 실행되어 바로 L1 레이블로 점프한다.
+L1에서 mov edx,0 한 번만 실행된다.
+따라서 최종적으로 EDX = 0 이다.
+
+13번
+mov edx,1
+mov eax,7FFFh
+cmp eax,8000h
+jb  L1
+mov edx,0
+L1:
+cmp는 부호 없는 비교에서도 7FFFh < 8000h 이므로 CF = 1 → jb L1 분기 발생
+그래서 mov edx,0는 실행되지 않고, EDX는 처음 값 1 그대로
+정답: EDX = 1
+
+14번
+mov edx,1
+mov eax,7FFFh
+cmp eax,0FFFF8000h
+jl  L2
+mov edx,0
+L2:
+7FFFh(양수) vs FFFF8000h(음수, -32768). 부호 있는 비교에서 7FFFh > FFFF8000h 이다.
+따라서 jl L2 조건(작을 때)은 거짓 → 분기 안 함, mov edx,0 실행
+정답: EDX = 0
+
+15번
+mov eax,-30
+cmp eax,-50
+jg  Target
+-30 > -50 이므로 부호 있는 비교에서 “greater” 조건이 참
+jg 분기가 일어나서 Target으로 점프한다.
+정답: True
+
+16번
+mov eax,-42
+cmp eax,26
+ja  Target
+ja는 부호 없는 비교에서 “above” 즉, CF=0 AND ZF=0일 때 분기.
+-42는 2의 보수로 매우 큰 unsigned 값으로 간주되므로, -42 > 26 (unsigned) → CF=0, ZF=0 → 분기한다.
+따라서 Target으로 점프한다.
+정답: True
+
+17번
+mov rbx,0FFFFFFFFFFFFFFFh
+and rbx,80h
+AND 80h는 하위 바이트에서 1000 0000b만 남기고 나머지는 0
+원래 값의 하위 바이트도 FFh이므로 결과는 0000000000000080h
+정답: RBX = 0000000000000080h
+
+18번
+mov rbx,0FFFFFFFFFFFFFFFh
+or  rbx,808080h
+FFF…F 와 OR 하면 어떤 비트든 1이어서 그대로 FFF…F 유지.
+정답: RBX = 0000FFFFFFFFFFFF
+
+19번
+mov rbx,0FFFFFFFFFFFFFFFh
+and rbx,808080h
+808080h = 00 80 80 80h (하위 24비트만 1 일부)
+상위 바이트들은 모두 0이므로, AND 결과는 하위 3바이트 패턴만 남은 0000000000808080h
+정답: RBX = 0000000000808080h
