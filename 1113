@@ -1,0 +1,122 @@
+7.9 qusetion
+1번
+mov al,0D4h        ; 11010100b
+mov al,0D4h
+shr al,1           ; a
+mov al,0D4h
+sar al,1           ; b
+mov al,0D4h
+sar al,4           ; c
+mov al,0D4h
+rol al,1           ; d
+a) SHR은 오른쪽으로 논리 시프트, 왼쪽엔 0 채움.
+11010100 >> 1 = 01101010b = 6Ah
+b) SAR은 산술 시프트, 부호비트(1)를 유지하며 오른쪽 이동.
+11010100 >> 1 (부호 유지) = 11101010b = EAh
+c) 4번 산술 시프트: 11010100 → 11101010 → 11110101 → 11111010 → 11111101b = FDh
+d) ROL 1: 11010100 회전 → 10101001b = A9h
+정답: a: AL = 6Ah, b: AL = EAh, c: AL = FDh, d: AL = A9h
+
+2번
+mov al,0D4h        ; 11010100b
+ror al,3           ; a
+
+mov al,0D4h
+rol al,7           ; b
+
+stc                ; CF=1
+mov al,0D4h
+rcl al,1           ; c
+
+stc
+mov al,0D4h
+rcr al,3           ; d
+a) ROR 3: 11010100을 오른쪽으로 3칸 회전 → 10011010b = 9Ah
+b) ROL 7은 ROR 1과 같음. ROR 1: 11010100 → 01101010b = 6Ah
+c) RCL 1: CF=1, AL=11010100. 왼쪽으로 1칸, 나온 비트는 CF로, CF는 새 하위비트
+결과 비트: 10101001b = A9h
+d) RCR 3: CF=1, AL=11010100, 오른쪽으로 3칸 회전 + CF 포함
+한 번 RCR: CF=0, AL=11101010
+두 번: CF=0, AL=01110101
+세 번: CF=1, AL=10111010b = BAh
+정답: a: AL = 9Ah, b: AL = 6Ah, c: AL = A9h, d: AL = BAh
+
+3번
+mov dx,0
+mov ax,222h   ; 0x222 = 546
+mov cx,100h   ; 0x100 = 256
+mul cx        ; DX:AX = AX * CX
+546 × 256 = 139,,,? 546 * 256 = 546 * 2^8 = 546 << 8 = 0x22200
+DX:AX = 0002h:2200h
+정답: AX = 2200h, DX = 0002h
+
+4번
+mov ax,63h    ; AX=0063h=99
+mov bl,10h    ; 16
+div bl        ; AL=99/16, AH=나머지
+99 / 16 = 6, 나머지 3
+AX = AH:AL = 03h:06h → 0603h
+정답: AX: AL=06h, AH=03h (AX = 0603h)
+
+5번
+mov eax,123400h  ; 0x00123400 = 1,193,984
+mov edx,0
+mov ebx,10h      ; 16
+div ebx
+1,193,984 / 16 = 74,624, 나머지 0
+정답: EAX = 00012340h, EDX = 00000000h
+
+6번
+mov ax,4000h   ; 16384
+mov dx,500h    ; 상위 워드 = 0x0500
+mov bx,10h     ; 16
+div bx         ; DX:AX / BX 
+피제수 = DX:AX = 0x0500_4000
+0x0500_4000 / 0x10 = 0x0500_400 (정수), 나머지 0
+몫은 AX에 들어감, 상위 워드는 DX
+결과: AX = 0500_400h = 50040h (하위 16비트 = 0040h), DX = 0000h
+
+7번
+mov bx,5        ; BX=0005
+stc             ; CF=1
+mov ax,60h      ; AX=0060
+adc bx,ax       ; BX = BX + AX + CF
+5 + 60h(96) + 1 = 0x5 + 0x60 + 1 = 0x66
+정답: BX = 0066h
+
+8번
+.data
+dividend_hi QWORD 00000108h
+dividend_lo QWORD 33300020h
+divisor     QWORD 00000100h
+.code
+mov rdx,dividend_hi
+mov rax,dividend_lo
+div divisor
+피제수 = RDX:RAX = 0x00000108_33300020
+제수 = 0x100 (256)
+64비트 div는 몫→RAX, 나머지→RDX
+0x...0020 은 256으로 나누어 떨어지므로 나머지 0
+결과: 몫 = 0x00000108_33300020 / 0x100 = 0x00000001_08333000, 나머지 0.
+정답: RAX = 00000001_08333000h, RDX = 00000000_00000000h
+
+9번
+인덱스 방향:
+mov esi,val1 은 맨 앞 바이트를 가리키는데, dec esi 로 뒤로 가고 있다
+64비트 정수 빼기는 보통 낮은 바이트부터(LSB) 시작해야 올바르게 자리 빌림이 전파된다.
+수정: mov esi,OFFSET val1+7, mov edi,OFFSET val2+7 그리고 루프마다 dec 그대로 사용
+반복 횟수 레지스터:
+CX를 쓰는 것은 맞지만, 8바이트라서 OK. 문제는 아니라서 그대로 둬도 된다
+결과 저장 위치:
+result 변수에 저장하려 했으면 목적지를 result 쪽으로 해야 한다
+만약 “val1 ← val1 − val2” 가 목적이라면 mov [esi],al 은 맞다
+문제에서 result QWORD 0 이 따로 있으므로, 의도는 result에 쓰는 것일 가능성이 큼
+그 경우: mov esi,OFFSET val1+7, mov edi,OFFSET val2+7, mov ebx,OFFSET result+7 추가 후 루프에서 mov [ebx],al 하고 dec ebx
+첫 바이트에서 CLC:
+CLC는 루프 전에 한 번만 하면 된다. 루프 안에는 없음 → 이 부분은 올바름
+
+10번
+imul rax,mem,imm 형식은 RAX = (메모리 값) × (즉값) 으로 64비트 곱셈을 한다
+여기서는 multiplicand 값 0001020304050000h 를 4배 하므로, 16진수로 왼쪽으로 두 비트(×4) 이동한 것과 같다
+계산: 0001020304050000h × 4 = 0004080C10140000h
+정답: RAX = 0004080C10140000h
